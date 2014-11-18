@@ -40,9 +40,12 @@ public class AWSDetails {
     public static final String SQS_QUEUE_NAME = "rss-feed-request";
     public static final String SQS_PUBLISHER_QUEUE = "rss-feed-publish";
     public static final String SQS_WEBSERVICE_REQUEST_QUEUE = "web-service-request";
-    public static final String DYNAMODB_TABLE_NAME = "rssfeed-table";
+    public static final String JOBREQUEST_TABLE_NAME = "jobrequest-table";
+    public static final String FEEDURL_REQUEST_TABLE_NAME = "feedurl-request-table";
     public static final String SUBSCRIBER_TABLE_NAME = "subscriber-table";
     public static final String CHANNEL_TABLE_NAME = "channel-table";
+    public static final String FEED_URL_TABLE_NAME = "feedurl-table";
+    public static final String ARTICLE_TABLE_NAME = "article-table";
 
     /*
      * The SDK provides several easy to use credentials providers.
@@ -94,16 +97,24 @@ public class AWSDetails {
         String webserviceRequestQueueUrl = SQS.createQueue(new CreateQueueRequest(SQS_WEBSERVICE_REQUEST_QUEUE)).getQueueUrl();
         System.out.println("Using Amazon SQS Queue: " + webserviceRequestQueueUrl);
 
-        if ( !Tables.doesTableExist(DYNAMODB, DYNAMODB_TABLE_NAME) ) {
-            System.out.println("Creating rss feed table...");
+        if ( !Tables.doesTableExist(DYNAMODB, JOBREQUEST_TABLE_NAME) ) {
+            System.out.println("Creating job request table...");
             DYNAMODB.createTable(new CreateTableRequest()
-                    .withTableName(DYNAMODB_TABLE_NAME)
+                    .withTableName(JOBREQUEST_TABLE_NAME)
+                    .withKeySchema(new KeySchemaElement("id", KeyType.HASH))
+                    .withAttributeDefinitions(new AttributeDefinition("id", ScalarAttributeType.S))
+                    .withProvisionedThroughput(new ProvisionedThroughput(50l, 50l)));
+        }
+        if ( !Tables.doesTableExist(DYNAMODB, FEEDURL_REQUEST_TABLE_NAME) ) {
+            System.out.println("Creating feed url request table...");
+            DYNAMODB.createTable(new CreateTableRequest()
+                    .withTableName(FEEDURL_REQUEST_TABLE_NAME)
                     .withKeySchema(new KeySchemaElement("id", KeyType.HASH))
                     .withAttributeDefinitions(new AttributeDefinition("id", ScalarAttributeType.S))
                     .withProvisionedThroughput(new ProvisionedThroughput(50l, 50l)));
         }
         if ( !Tables.doesTableExist(DYNAMODB, SUBSCRIBER_TABLE_NAME) ) {
-            System.out.println("Creating subscriber table....");
+            System.out.println("Creating subscriber table...");
             DYNAMODB.createTable(new CreateTableRequest()
                     .withTableName(SUBSCRIBER_TABLE_NAME)
                     .withKeySchema(new KeySchemaElement("id", KeyType.HASH))
@@ -111,16 +122,35 @@ public class AWSDetails {
                     .withProvisionedThroughput(new ProvisionedThroughput(50l, 50l)));
         }
         if ( !Tables.doesTableExist(DYNAMODB, CHANNEL_TABLE_NAME) ) {
-            System.out.println("Creating subscriber table....");
+            System.out.println("Creating channel table....");
             DYNAMODB.createTable(new CreateTableRequest()
                     .withTableName(CHANNEL_TABLE_NAME)
                     .withKeySchema(new KeySchemaElement("id", KeyType.HASH))
                     .withAttributeDefinitions(new AttributeDefinition("id", ScalarAttributeType.S))
                     .withProvisionedThroughput(new ProvisionedThroughput(50l, 50l)));
         }
-        Tables.waitForTableToBecomeActive(DYNAMODB, DYNAMODB_TABLE_NAME);
+        if ( !Tables.doesTableExist(DYNAMODB, FEED_URL_TABLE_NAME) ) {
+            System.out.println("Creating feedurl table....");
+            DYNAMODB.createTable(new CreateTableRequest()
+                    .withTableName(FEED_URL_TABLE_NAME)
+                    .withKeySchema(new KeySchemaElement("id", KeyType.HASH))
+                    .withAttributeDefinitions(new AttributeDefinition("id", ScalarAttributeType.S))
+                    .withProvisionedThroughput(new ProvisionedThroughput(50l, 50l)));
+        }
+        if ( !Tables.doesTableExist(DYNAMODB, ARTICLE_TABLE_NAME) ) {
+            System.out.println("Creating article table....");
+            DYNAMODB.createTable(new CreateTableRequest()
+                    .withTableName(ARTICLE_TABLE_NAME)
+                    .withKeySchema(new KeySchemaElement("id", KeyType.HASH))
+                    .withAttributeDefinitions(new AttributeDefinition("id", ScalarAttributeType.S))
+                    .withProvisionedThroughput(new ProvisionedThroughput(50l, 50l)));
+        }
+        Tables.waitForTableToBecomeActive(DYNAMODB, JOBREQUEST_TABLE_NAME);
+        Tables.waitForTableToBecomeActive(DYNAMODB, FEEDURL_REQUEST_TABLE_NAME);
         Tables.waitForTableToBecomeActive(DYNAMODB, SUBSCRIBER_TABLE_NAME);
         Tables.waitForTableToBecomeActive(DYNAMODB, CHANNEL_TABLE_NAME);
-        System.out.println("Using AWS DynamoDB Table: " + DYNAMODB_TABLE_NAME + "," + SUBSCRIBER_TABLE_NAME + "," + CHANNEL_TABLE_NAME);
-    }
+        Tables.waitForTableToBecomeActive(DYNAMODB, FEED_URL_TABLE_NAME);        
+        Tables.waitForTableToBecomeActive(DYNAMODB, ARTICLE_TABLE_NAME);
+        System.out.println("Using AWS DynamoDB Table: " + JOBREQUEST_TABLE_NAME + "," + SUBSCRIBER_TABLE_NAME + "," + CHANNEL_TABLE_NAME);
+    }	
 }
