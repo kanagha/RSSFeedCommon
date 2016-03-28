@@ -1,61 +1,50 @@
 package com.rss.common;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.io.StringReader;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.springframework.stereotype.Component;
 
+import com.google.gson.Gson;
+import com.google.gson.stream.JsonReader;
+
+@Component
 public class RSSFeedQueueRequest {
-	List<String> URLlist;
-	int subscriberId;
-	
+	public List<String> URLlist;
+	public String channelId;
+
 	public RSSFeedQueueRequest() {
 		URLlist = new LinkedList<String>();
 	}
-	
-	public RSSFeedQueueRequest(List<String> urlList, int id){
+
+	public RSSFeedQueueRequest(List<String> urlList, String channelId){
 		URLlist = urlList;
-		subscriberId = id;
+		this.channelId = channelId;
 	}	
-	
+
 	public RSSFeedQueueRequest(String jsonString) throws IOException, ParseException {
-		//JsonFactory factory = new JsonFactory();
-		//JsonParser parser = factory.createJsonParser(jsonString);
-		JSONParser parser =  new JSONParser();
-		//JSONObject obj1 = new JSONObject(jsonString);
-		Object object = parser.parse(jsonString);
-		JSONObject jsonObject =(JSONObject)object;
-		Long obj1 = (Long) jsonObject.get("Id");
-		subscriberId = obj1.intValue();
-		List<String> list = (List<String>) jsonObject.get("URLlist");
-		URLlist = list;
+		URLlist = new LinkedList<String>();
+		Gson gson = new Gson();
+		JsonReader reader = new JsonReader(new StringReader(jsonString));
+		reader.setLenient(true);
+		RSSFeedQueueRequest request = gson.fromJson(reader, RSSFeedQueueRequest.class);
+		URLlist.addAll(request.URLlist);
+		this.channelId = request.channelId;
 	}
-	
+
 	public List<String> getURLList() {
 		return URLlist;
 	}
-	
-	public int getSubscriberId() {
-		return subscriberId;
+
+	public String getChannelId() {
+		return channelId;
 	}
-	
+
 	public String serializeToJSON() {
-		List<String> list = new LinkedList<String>();		
-		
-		for(String url:  URLlist){
-			list.add(url);
-		}		
-		JSONObject object = new JSONObject();
-		object.put("Id", subscriberId);
-		object.put("URLlist", list);
-		String jsonString =  object.toString();
-		// format the string by escaping the 
-		return jsonString;
+		Gson gson = new Gson();
+		return gson.toJson(this);
 	}	
 }
-

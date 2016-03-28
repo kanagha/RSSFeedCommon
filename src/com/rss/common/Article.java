@@ -2,6 +2,12 @@ package com.rss.common;
 
 import java.io.Serializable;
 
+import org.springframework.stereotype.Component;
+
+import com.google.gson.Gson;
+import com.rss.common.dataprovider.ArticleObjectMapper;
+
+@Component
 public class Article implements Serializable {
 	// this is supposed to be the global unique identifier
 	public String guid;
@@ -9,6 +15,36 @@ public class Article implements Serializable {
 	public String link;
 	public String description;
 	public String  publishedDate;
+	
+	public Article() {
+		
+	}
+	
+	public Article(ArticleObjectMapper articleObjectMapper) {
+		guid = articleObjectMapper.getGuid();
+		title = articleObjectMapper.getTitle();
+		link = articleObjectMapper.getLink();
+		description = articleObjectMapper.getDescription();
+		publishedDate = articleObjectMapper.getPublishedDate();
+	}
+
+	public Article(String articleJsonString) {
+		Gson gson = new Gson();
+		Article article = gson.fromJson(articleJsonString, Article.class);
+		this.guid = article.guid;
+		this.title = article.title;
+		this.link = article.link;
+		this.description = article.description;
+		this.publishedDate = article.publishedDate;
+	}
+
+	public Article(Article article) {
+		this.guid = article.guid;
+		this.title = article.title;
+		this.link = article.link;
+		this.description = article.description;
+		this.publishedDate = article.publishedDate;
+	}
 	
 	// change this. because guid is supposed to be unique. just check the guid
 	public boolean equals(Object arg){
@@ -47,5 +83,10 @@ public class Article implements Serializable {
 			retValue.append(publishedDate).append(",");
 		}
 		return retValue.toString();
-	}	
+	}
+
+	public String serializeToJSON() {
+		Gson gson = new Gson();
+		return gson.toJson(this);
+	}
 }
