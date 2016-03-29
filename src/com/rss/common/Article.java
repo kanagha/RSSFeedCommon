@@ -2,12 +2,14 @@ package com.rss.common;
 
 import java.io.Serializable;
 
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.google.gson.Gson;
 import com.rss.common.dataprovider.ArticleObjectMapper;
 
 @Component
+@Scope("prototype")
 public class Article implements Serializable {
 	// this is supposed to be the global unique identifier
 	public String guid;
