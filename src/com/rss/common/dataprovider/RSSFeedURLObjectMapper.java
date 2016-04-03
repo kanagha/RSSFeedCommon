@@ -15,25 +15,25 @@ etag
 @XmlRootElement
 @DynamoDBTable(tableName = "rssfeedurl")
 public class RSSFeedURLObjectMapper {
-	
-	String url;
-	String eTag;	
-	
-	@DynamoDBHashKey
-	public String getUrl() {
-		return url;
-	}
-	
-	public void setUrl(String url){
-		this.url = url;
-	}
+    
+    String url;
+    String eTag;    
+    
+    @DynamoDBHashKey
+    public String getUrl() {
+        return url;
+    }
+    
+    public void setUrl(String url){
+        this.url = url;
+    }
 
-	@DynamoDBAttribute
-	public String getETag() {
-		return eTag;
-	}
+    @DynamoDBAttribute
+    public String getETag() {
+        return eTag;
+    }
 
-	public void setETag(String eTag) {
-		this.eTag = eTag;
-	}
+    public void setETag(String eTag) {
+        this.eTag = eTag;
+    }
 }

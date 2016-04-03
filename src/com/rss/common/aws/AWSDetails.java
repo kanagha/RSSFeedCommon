@@ -28,6 +28,8 @@ import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.model.KeyType;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
+import com.amazonaws.services.dynamodbv2.util.TableUtils;
+import com.amazonaws.services.dynamodbv2.util.TableUtils.TableNeverTransitionedToStateException;
 import com.amazonaws.services.dynamodbv2.util.Tables;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.sqs.AmazonSQSClient;
@@ -41,15 +43,14 @@ public class AWSDetails {
 
     public static final String SQS_ADDJOB_GETFEEDS_QUEUE = "rss-addjob-getfeeds-queue";
     public static final String SQS_GETFEEDS_QUEUE = "rss-getfeeds-queue";
-    public static final String SQS_WEBSERVICE_REQUEST_QUEUE = "web-service-request";
-    
+
     public static final String JOBREQUEST_TABLE_NAME = "jobrequest";
     public static final String FEEDURL_REQUEST_TABLE_NAME = "feedurl-request";
+
     public static final String SUBSCRIBER_TABLE_NAME = "subscriber";
     public static final String CHANNEL_TABLE_NAME = "channel";
     public static final String FEED_URL_TABLE_NAME = "rssfeedurl";
     public static final String ARTICLE_TABLE_NAME = "article";
-    public static final String WEBSOCKET_CONFIG_TABLE_NAME = "websocketEndPointConfig";
 
     /*
      * The SDK provides several easy to use credentials providers.
@@ -76,7 +77,6 @@ public class AWSDetails {
     public static final AmazonDynamoDBClient DYNAMODB = new AmazonDynamoDBClient(CREDENTIALS_PROVIDER);
     public static final DynamoDBMapper DYNAMODB_MAPPER = new DynamoDBMapper(DYNAMODB, CREDENTIALS_PROVIDER);
 
-
     static {
         /*
          * Set any other client options that you need here. For example, if you
@@ -91,15 +91,12 @@ public class AWSDetails {
     }
 
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws TableNeverTransitionedToStateException, InterruptedException {
         String queueUrl = SQS.createQueue(new CreateQueueRequest(SQS_ADDJOB_GETFEEDS_QUEUE)).getQueueUrl();
         System.out.println("Using Amazon SQS Queue: " + queueUrl);
-        
+
         String publisherQueueUrl = SQS.createQueue(new CreateQueueRequest(SQS_GETFEEDS_QUEUE)).getQueueUrl();
         System.out.println("Using Amazon SQS Queue: " + publisherQueueUrl);
-        
-        String webserviceRequestQueueUrl = SQS.createQueue(new CreateQueueRequest(SQS_WEBSERVICE_REQUEST_QUEUE)).getQueueUrl();
-        System.out.println("Using Amazon SQS Queue: " + webserviceRequestQueueUrl);
 
         if ( !Tables.doesTableExist(DYNAMODB, JOBREQUEST_TABLE_NAME) ) {
             System.out.println("Creating job request table...");
@@ -141,7 +138,7 @@ public class AWSDetails {
                     .withAttributeDefinitions(new AttributeDefinition("url", ScalarAttributeType.S))
                     .withProvisionedThroughput(new ProvisionedThroughput(50l, 50l)));
         }
-        List<KeySchemaElement> keySchemaElements = new ArrayList<KeySchemaElement>();
+        List<KeySchemaElement> keySchemaElements = new ArrayList<>();
         keySchemaElements.add(new KeySchemaElement("feedUrl", KeyType.HASH));
         keySchemaElements.add(new KeySchemaElement("publishedDate", KeyType.RANGE));
         if ( !Tables.doesTableExist(DYNAMODB, ARTICLE_TABLE_NAME) ) {
@@ -154,24 +151,14 @@ public class AWSDetails {
                     .withAttributeDefinitions(new AttributeDefinition("publishedDate", ScalarAttributeType.S))
                     .withProvisionedThroughput(new ProvisionedThroughput(50l, 50l)));
         }
-        
-        if ( !Tables.doesTableExist(DYNAMODB, WEBSOCKET_CONFIG_TABLE_NAME) ) {
-            System.out.println("Creating websocket endpoint config table....");
-            DYNAMODB.createTable(new CreateTableRequest()
-                    .withTableName(WEBSOCKET_CONFIG_TABLE_NAME)
-                    .withKeySchema(keySchemaElements)
-                    .withAttributeDefinitions(new AttributeDefinition("id", ScalarAttributeType.S))
-                    .withProvisionedThroughput(new ProvisionedThroughput(50l, 50l)));
-        }
-        
-        Tables.waitForTableToBecomeActive(DYNAMODB, JOBREQUEST_TABLE_NAME);
-        Tables.waitForTableToBecomeActive(DYNAMODB, FEEDURL_REQUEST_TABLE_NAME);
-        Tables.waitForTableToBecomeActive(DYNAMODB, SUBSCRIBER_TABLE_NAME);
-        Tables.waitForTableToBecomeActive(DYNAMODB, CHANNEL_TABLE_NAME);
-        Tables.waitForTableToBecomeActive(DYNAMODB, FEED_URL_TABLE_NAME);
-        Tables.waitForTableToBecomeActive(DYNAMODB, ARTICLE_TABLE_NAME);
-        Tables.waitForTableToBecomeActive(DYNAMODB, WEBSOCKET_CONFIG_TABLE_NAME);
+
+        TableUtils.waitUntilActive(DYNAMODB, JOBREQUEST_TABLE_NAME);
+        TableUtils.waitUntilActive(DYNAMODB, FEEDURL_REQUEST_TABLE_NAME);
+        TableUtils.waitUntilActive(DYNAMODB, SUBSCRIBER_TABLE_NAME);
+        TableUtils.waitUntilActive(DYNAMODB, CHANNEL_TABLE_NAME);
+        TableUtils.waitUntilActive(DYNAMODB, FEED_URL_TABLE_NAME);
+        TableUtils.waitUntilActive(DYNAMODB, ARTICLE_TABLE_NAME);
         System.out.println("Using AWS DynamoDB Table: " + StringUtils.join(",", JOBREQUEST_TABLE_NAME, FEEDURL_REQUEST_TABLE_NAME, SUBSCRIBER_TABLE_NAME,
-        		CHANNEL_TABLE_NAME, FEED_URL_TABLE_NAME, ARTICLE_TABLE_NAME, WEBSOCKET_CONFIG_TABLE_NAME));
-    }	
+        		CHANNEL_TABLE_NAME, FEED_URL_TABLE_NAME, ARTICLE_TABLE_NAME));
+    }
 }
